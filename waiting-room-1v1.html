@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1:1 대화 대기방 - Bot or Not Room</title>
+    <link rel="stylesheet" href="styles/waiting-room.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 매칭 취소 버튼 -->
+        <div class="cancel-section">
+            <button class="cancel-btn" id="cancelMatchingBtn">
+                <span class="cancel-icon">✕</span>
+                매칭 취소
+            </button>
+        </div>
+        
+        <!-- 메인 대기 콘텐츠 -->
+        <main class="waiting-content">
+            <div class="waiting-card">
+                <div class="loading-animation">
+                    <div class="spinner"></div>
+                </div>
+                
+                <h2 class="waiting-title">매치상대 찾는중</h2>
+                
+                <div class="waiting-status">
+                    <p class="status-text">잠시만 기다려주세요...</p>
+                    <div class="queue-info">
+                        <span class="queue-number">대기 순번: <strong id="queueNumber">1</strong></span>
+                        <span class="estimated-time">예상 대기 시간: <strong id="estimatedTime">1-2분</strong></span>
+                    </div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 푸터 -->
+        <footer class="footer">
+            <p>&copy; 2024 Bot or Not Room. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <script src="scripts/waiting-room.js"></script>
+</body>
+</html>

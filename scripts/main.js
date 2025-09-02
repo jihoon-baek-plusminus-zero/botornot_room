@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1:1 접속 버튼 클릭 이벤트
     oneToOneBtn.addEventListener('click', function() {
         console.log('1:1 접속 버튼이 클릭되었습니다.');
-        // TODO: 1:1 접속 기능 구현 예정
-        showComingSoon('1:1 접속');
+        // 1:1 대기방으로 이동
+        window.location.href = 'waiting-room-1v1.html';
     });
     
     // 1:N 접속 버튼 클릭 이벤트
