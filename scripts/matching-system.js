@@ -208,31 +208,40 @@ class MatchingSystem {
      * 매칭 처리
      */
     processMatching() {
-        if (this.waitingQueue.length < 2) {
-            return; // 2명 미만이면 매칭 불가
-        }
-        
-        console.log(`매칭 시도: 대기열 ${this.waitingQueue.length}명`);
-        
-        // 2명씩 순서대로 매칭
-        while (this.waitingQueue.length >= 2) {
-            const user1 = this.waitingQueue.shift();
-            const user2 = this.waitingQueue.shift();
-            
-            // 매칭 생성
-            const match = this.createMatch(user1, user2);
-            
-            if (match) {
-                console.log(`매칭 완료: ${user1.name} + ${user2.name} → 방 ${match.roomId}`);
-                
-                // 매칭된 사용자들에게 알림
-                this.notifyMatch(user1, match);
-                this.notifyMatch(user2, match);
+        try {
+            if (this.waitingQueue.length < 2) {
+                return; // 2명 미만이면 매칭 불가
             }
+            
+            console.log(`매칭 시도: 대기열 ${this.waitingQueue.length}명`);
+            
+            // 2명씩 순서대로 매칭
+            while (this.waitingQueue.length >= 2) {
+                const user1 = this.waitingQueue.shift();
+                const user2 = this.waitingQueue.shift();
+                
+                console.log(`매칭 시도: ${user1.name} + ${user2.name}`);
+                
+                // 매칭 생성
+                const match = this.createMatch(user1, user2);
+                
+                if (match) {
+                    console.log(`매칭 완료: ${user1.name} + ${user2.name} → 방 ${match.roomId}`);
+                    
+                    // 매칭된 사용자들에게 알림
+                    this.notifyMatch(user1, match);
+                    this.notifyMatch(user2, match);
+                } else {
+                    console.error('매칭 생성 실패');
+                }
+            }
+            
+            // 대기열 상태 저장
+            this.saveQueueToStorage();
+        } catch (error) {
+            console.error('매칭 처리 중 오류 발생:', error);
+            // 에러가 발생해도 시스템은 계속 실행
         }
-        
-        // 대기열 상태 저장
-        this.saveQueueToStorage();
     }
     
     /**
@@ -242,28 +251,35 @@ class MatchingSystem {
      * @returns {Object} 매칭 정보
      */
     createMatch(user1, user2) {
-        const roomId = this.generateRoomId();
-        const matchTime = Date.now();
-        
-        const match = {
-            roomId: roomId,
-            users: [user1, user2],
-            matchTime: matchTime,
-            status: 'active',
-            createdAt: new Date().toISOString()
-        };
-        
-        // 방 정보 저장
-        this.activeRooms.set(roomId, match);
-        this.saveRoomsToStorage();
-        
-        // 사용자 상태 업데이트
-        user1.status = 'matched';
-        user1.roomId = roomId;
-        user2.status = 'matched';
-        user2.roomId = roomId;
-        
-        return match;
+        try {
+            const roomId = this.generateRoomId();
+            const matchTime = Date.now();
+            
+            const match = {
+                roomId: roomId,
+                users: [user1, user2],
+                matchTime: matchTime,
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+            
+            console.log(`방 생성: ${roomId}`);
+            
+            // 방 정보 저장
+            this.activeRooms.set(roomId, match);
+            this.saveRoomsToStorage();
+            
+            // 사용자 상태 업데이트
+            user1.status = 'matched';
+            user1.roomId = roomId;
+            user2.status = 'matched';
+            user2.roomId = roomId;
+            
+            return match;
+        } catch (error) {
+            console.error('매칭 생성 중 오류 발생:', error);
+            return null;
+        }
     }
     
     /**
@@ -272,31 +288,36 @@ class MatchingSystem {
      * @param {Object} match - 매칭 정보
      */
     notifyMatch(user, match) {
-        console.log(`사용자 ${user.name}에게 매칭 알림:`, {
-            roomId: match.roomId,
-            partner: match.users.find(u => u.id !== user.id)?.name,
-            matchTime: match.matchTime
-        });
-        
-        // 매칭 완료 상태를 localStorage에 저장 (다른 탭에서 감지 가능)
-        const matchCompleteKey = `botornot_match_complete_${user.id}`;
-        const matchData = {
-            roomId: match.roomId,
-            matchTime: match.matchTime,
-            timestamp: Date.now(),
-            userId: user.id,
-            userName: user.name
-        };
-        localStorage.setItem(matchCompleteKey, JSON.stringify(matchData));
-        
-        // 다른 탭에 매칭 완료 알림
-        this.notifyStorageChange('match_complete');
-        
-        // 현재 페이지가 대기방인 경우에만 리다이렉트
-        if (window.location.href.includes('waiting-room')) {
-            console.log(`매칭 완료! ${redirectUrl}로 이동합니다.`);
-            const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
-            window.location.href = redirectUrl;
+        try {
+            console.log(`사용자 ${user.name}에게 매칭 알림:`, {
+                roomId: match.roomId,
+                partner: match.users.find(u => u.id !== user.id)?.name,
+                matchTime: match.matchTime
+            });
+            
+            // 매칭 완료 상태를 localStorage에 저장 (다른 탭에서 감지 가능)
+            const matchCompleteKey = `botornot_match_complete_${user.id}`;
+            const matchData = {
+                roomId: match.roomId,
+                matchTime: match.matchTime,
+                timestamp: Date.now(),
+                userId: user.id,
+                userName: user.name
+            };
+            localStorage.setItem(matchCompleteKey, JSON.stringify(matchData));
+            
+            // 다른 탭에 매칭 완료 알림
+            this.notifyStorageChange('match_complete');
+            
+            // 현재 페이지가 대기방인 경우에만 리다이렉트
+            if (window.location.href.includes('waiting-room')) {
+                const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
+                console.log(`매칭 완료! ${redirectUrl}로 이동합니다.`);
+                window.location.href = redirectUrl;
+            }
+        } catch (error) {
+            console.error('매칭 완료 알림 처리 중 오류 발생:', error);
+            // 에러가 발생해도 매칭은 계속 진행
         }
     }
     

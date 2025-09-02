@@ -40,25 +40,36 @@ document.addEventListener('DOMContentLoaded', function() {
  * 사용자 초기화 및 대기열 추가
  */
 function initializeUser() {
-    // 사용자 정보 생성
-    currentUser = {
-        id: generateUserId(),
-        name: generateUserName(),
-        joinTime: Date.now(),
-        tabId: generateTabId()
-    };
-    
-    console.log('사용자 정보:', currentUser);
-    
-    // 매치메이킹 시스템의 대기열에 추가
-    if (window.matchingSystem) {
-        const queuePosition = window.matchingSystem.addToQueue(currentUser);
-        console.log(`대기열에 추가되었습니다. (위치: ${queuePosition})`);
+    try {
+        // 사용자 정보 생성
+        currentUser = {
+            id: generateUserId(),
+            name: generateUserName(),
+            joinTime: Date.now(),
+            tabId: generateTabId()
+        };
         
-        // 대기열 상태 모니터링 시작
-        startQueueMonitoring();
-    } else {
-        console.error('매치메이킹 시스템을 찾을 수 없습니다.');
+        console.log('사용자 정보:', currentUser);
+        
+        // 매치메이킹 시스템의 대기열에 추가
+        if (window.matchingSystem) {
+            const queuePosition = window.matchingSystem.addToQueue(currentUser);
+            console.log(`대기열에 추가되었습니다. (위치: ${queuePosition})`);
+            
+            // 대기열 상태 모니터링 시작
+            startQueueMonitoring();
+        } else {
+            console.error('매치메이킹 시스템을 찾을 수 없습니다.');
+            // 3초 후 재시도
+            setTimeout(() => {
+                if (window.matchingSystem) {
+                    console.log('매치메이킹 시스템 재시도 중...');
+                    initializeUser();
+                }
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('사용자 초기화 중 오류 발생:', error);
     }
 }
 
