@@ -64,6 +64,30 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = 'index.html';
     });
     
+    // localStorage 변경 감지 이벤트 리스너 추가
+    window.addEventListener('storage', function(e) {
+        console.log('🔄 localStorage 변경 감지:', e.key, e.newValue);
+        
+        // 사용자 목록 변경 감지
+        if (e.key === `botornot_room_${roomId}_users`) {
+            console.log('👥 사용자 목록 변경됨:', e.newValue);
+            updateRoomTitle();
+            checkOpponentStatus();
+        }
+        
+        // 새 메시지 감지
+        if (e.key && e.key.includes('_messages_') && e.key.includes(roomId)) {
+            console.log('💬 새 메시지 감지:', e.key);
+            checkNewMessages();
+        }
+        
+        // 상대방 방 나감 알림 감지
+        if (e.key && e.key.includes('_leave_notification')) {
+            console.log('🚪 상대방 방 나감 알림 감지:', e.key);
+            checkOpponentLeaveNotification();
+        }
+    });
+    
     // 페이지 로드 완료 로그
     const loadTime = performance.now();
     console.log(`1:1 대화방 로드 완료: ${loadTime.toFixed(2)}ms`);
@@ -112,6 +136,9 @@ function initializeRoom() {
             existingUsers.push(currentUser.id);
             localStorage.setItem(`botornot_room_${roomId}_users`, JSON.stringify(existingUsers));
             console.log(`✅ 사용자 목록에 추가됨: ${currentUser.name} (총 ${existingUsers.length}명)`);
+            
+            // 다른 탭에 사용자 목록 변경 알림 (storage 이벤트 발생)
+            console.log('🔔 다른 탭에 사용자 목록 변경 알림 전송');
         } else {
             console.log(`ℹ️ 사용자가 이미 목록에 존재함: ${currentUser.name}`);
         }
@@ -206,6 +233,10 @@ function checkOpponentStatus() {
             // 상대방이 아직 접속하지 않은 경우, 방을 종료하지 않고 대기
             return;
         }
+        
+        // 상대방 발견!
+        console.log('✅ 상대방 발견:', opponentId);
+        console.log('🎯 현재 방 사용자 수:', userCount);
         
         // 상대방이 정상적으로 접속되어 있음 (활동 시간 무시)
         
@@ -380,6 +411,10 @@ function sendMessageToOpponent(messageData) {
                 
                 // 상대방에게 새 메시지 알림
                 localStorage.setItem(`botornot_room_${roomId}_user_${opponentId}_new_message`, 'true');
+                
+                // 다른 탭에 메시지 전송 알림 (storage 이벤트 발생)
+                console.log('💬 상대방에게 메시지 전송 완료:', opponentId);
+                console.log('🔔 다른 탭에 메시지 전송 알림 전송');
             }
         }
     } catch (error) {
@@ -398,8 +433,11 @@ function checkNewMessages() {
             const messageQueue = JSON.parse(localStorage.getItem(`botornot_room_${roomId}_messages_${currentUser.id}`) || '[]');
             
             if (messageQueue.length > 0) {
+                console.log('📥 새 메시지 수신:', messageQueue.length, '개');
+                
                 // 새 메시지 표시
                 messageQueue.forEach(messageData => {
+                    console.log('💬 메시지 표시:', messageData.text);
                     displayMessage(messageData);
                 });
                 
@@ -408,6 +446,8 @@ function checkNewMessages() {
                 
                 // 새 메시지 알림 제거
                 localStorage.removeItem(`botornot_room_${roomId}_user_${currentUser.id}_new_message`);
+                
+                console.log('✅ 메시지 처리 완료');
             }
         }
     } catch (error) {
