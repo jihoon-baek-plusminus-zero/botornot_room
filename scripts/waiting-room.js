@@ -4,14 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 요소들 가져오기
     const cancelMatchingBtn = document.getElementById('cancelMatchingBtn');
-    const progressFill = document.getElementById('progressFill');
-    const queueNumber = document.getElementById('queueNumber');
-    const estimatedTime = document.getElementById('estimatedTime');
     
     // 대기 상태 초기화
     let isWaiting = true;
-    let queuePosition = 1;
-    let waitTime = 0;
     
     // 매칭 취소 버튼 클릭 이벤트
     cancelMatchingBtn.addEventListener('click', function() {
@@ -32,9 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 진행바 애니메이션 시작
-    startProgressAnimation();
-    
     // 대기 상태 시뮬레이션 (실제로는 서버와 통신)
     simulateWaiting();
     
@@ -46,49 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-/**
- * 진행바 애니메이션 시작
- */
-function startProgressAnimation() {
-    const progressFill = document.getElementById('progressFill');
-    
-    // 진행바 애니메이션
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        if (!isWaiting) {
-            clearInterval(progressInterval);
-            return;
-        }
-        
-        progress += Math.random() * 2;
-        if (progress > 100) progress = 100;
-        
-        progressFill.style.width = progress + '%';
-        
-        // 진행바 색상 변화
-        if (progress > 80) {
-            progressFill.style.background = 'linear-gradient(90deg, #4CAF50, #45a049)';
-        } else if (progress > 50) {
-            progressFill.style.background = 'linear-gradient(90deg, #FF9800, #F57C00)';
-        }
-        
-        if (progress >= 100) {
-            clearInterval(progressInterval);
-            // 매칭 완료 시뮬레이션
-            setTimeout(() => {
-                matchComplete();
-            }, 1000);
-        }
-    }, 200);
-}
+
 
 /**
  * 대기 상태 시뮬레이션
  */
 function simulateWaiting() {
-    const queueNumber = document.getElementById('queueNumber');
-    const estimatedTime = document.getElementById('estimatedTime');
-    
     let timeElapsed = 0;
     const timeInterval = setInterval(() => {
         if (!isWaiting) {
@@ -97,22 +52,6 @@ function simulateWaiting() {
         }
         
         timeElapsed += 1;
-        
-        // 대기 시간 업데이트
-        if (timeElapsed < 60) {
-            estimatedTime.innerHTML = `<strong>${Math.ceil(60 - timeElapsed)}초</strong>`;
-        } else {
-            const minutes = Math.ceil((120 - timeElapsed) / 60);
-            estimatedTime.innerHTML = `<strong>${minutes}분</strong>`;
-        }
-        
-        // 대기 순번 업데이트 (실제로는 서버에서 받아옴)
-        if (timeElapsed % 10 === 0 && timeElapsed > 0) {
-            const currentQueue = parseInt(queueNumber.textContent);
-            if (currentQueue > 1) {
-                queueNumber.textContent = currentQueue - 1;
-            }
-        }
         
         // 2분 후 자동 매칭 완료 (테스트용)
         if (timeElapsed >= 120) {
