@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 현재 사용자를 전역으로 노출 (매칭 시스템에서 접근 가능)
     window.currentUser = currentUser;
     
+    // 통합 모니터링 시스템 시작
+    startUnifiedMonitoring();
+    
     // 매칭 취소 버튼 클릭 이벤트
     cancelMatchingBtn.addEventListener('click', function() {
         console.log('매칭 취소 요청됨');
@@ -51,13 +54,14 @@ function initializeUser() {
         
         console.log('사용자 정보:', currentUser);
         
+        // 사용자 상태를 'waiting'으로 설정
+        localStorage.setItem(`botornot_user_${currentUser.id}_status`, 'waiting');
+        console.log('✅ 사용자 상태를 "waiting"으로 설정했습니다.');
+        
         // 매치메이킹 시스템의 대기열에 추가
         if (window.matchingSystem) {
             const queuePosition = window.matchingSystem.addToQueue(currentUser);
             console.log(`대기열에 추가되었습니다. (위치: ${queuePosition})`);
-            
-            // 대기열 상태 모니터링 시작
-            startQueueMonitoring();
         } else {
             console.error('매치메이킹 시스템을 찾을 수 없습니다.');
             // 3초 후 재시도
@@ -74,32 +78,62 @@ function initializeUser() {
 }
 
 /**
- * 대기열 상태 모니터링
+ * 통합 모니터링 시스템
  */
-function startQueueMonitoring() {
+function startUnifiedMonitoring() {
+    console.log('🔍 통합 모니터링 시스템 시작...');
+    
     const monitorInterval = setInterval(() => {
-        if (!isWaiting || !currentUser) {
-            clearInterval(monitorInterval);
-            return;
-        }
-        
-        // 대기열 상태 확인
-        if (window.matchingSystem) {
-            const queueStatus = window.matchingSystem.getQueueStatus();
-            console.log('현재 대기열 상태:', queueStatus);
+        try {
+            // 사용자 정보 확인
+            if (!currentUser) {
+                console.log('⏹️ 모니터링 중단: 사용자 정보 없음');
+                clearInterval(monitorInterval);
+                return;
+            }
             
-            // 사용자가 대기열에서 제거되었는지 확인 (매칭 완료)
-            if (queueStatus.queue.every(user => user.id !== currentUser.id)) {
-                console.log('사용자가 대기열에서 제거되었습니다. (매칭 완료 예정)');
+            // 사용자 상태 확인 (localStorage 기반)
+            const userStatus = localStorage.getItem(`botornot_user_${currentUser.id}_status`);
+            if (userStatus !== 'waiting') {
+                console.log('⏹️ 모니터링 중단: 사용자 상태 변경됨', userStatus);
+                clearInterval(monitorInterval);
+                return;
+            }
+            
+            // 매칭 완료 데이터 확인
+            const matchCompleteKey = `botornot_match_complete_${currentUser.id}`;
+            const matchData = localStorage.getItem(matchCompleteKey);
+            
+            if (matchData) {
+                console.log('🎯 매칭 완료 데이터 발견:', matchData);
                 clearInterval(monitorInterval);
                 
-                // 매칭 완료 상태 확인 (즉시 확인)
-                setTimeout(() => {
-                    window.matchingSystem.checkUserMatchStatus();
-                }, 100);
+                try {
+                    const match = JSON.parse(matchData);
+                    console.log('✅ 매칭 완료 데이터 파싱 성공:', match);
+                    
+                    // 매칭 완료 페이지로 이동
+                    const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
+                    console.log(`🚀 매칭 완료! ${redirectUrl}로 이동합니다.`);
+                    
+                    // 데이터 정리
+                    localStorage.removeItem(matchCompleteKey);
+                    localStorage.setItem(`botornot_user_${currentUser.id}_status`, 'matched');
+                    console.log('🧹 매칭 완료 데이터 정리 및 상태 업데이트 완료');
+                    
+                    // 페이지 이동
+                    window.location.href = redirectUrl;
+                } catch (error) {
+                    console.error('❌ 매칭 데이터 파싱 오류:', error);
+                }
+            } else {
+                console.log('⏳ 아직 매칭 완료 데이터가 없습니다. 계속 대기...');
             }
+        } catch (error) {
+            console.error('❌ 모니터링 중 오류 발생:', error);
+            // 에러가 발생해도 모니터링은 계속 진행
         }
-    }, 2000); // 2초마다 확인
+    }, 1000); // 1초마다 확인
 }
 
 /**
@@ -107,18 +141,26 @@ function startQueueMonitoring() {
  */
 function cancelMatching() {
     if (confirm('정말로 매칭을 취소하시겠습니까?')) {
-        console.log('매칭이 취소되었습니다.');
-        
-        // 대기 상태 중지
-        isWaiting = false;
-        
-        // 대기열에서 사용자 제거
-        if (currentUser && window.matchingSystem) {
-            window.matchingSystem.removeFromQueue(currentUser.id);
+        try {
+            console.log('매칭이 취소되었습니다.');
+            
+            // 대기열에서 사용자 제거
+            if (currentUser && window.matchingSystem) {
+                window.matchingSystem.removeFromQueue(currentUser.id);
+                console.log('✅ 대기열에서 사용자를 제거했습니다.');
+            }
+            
+            // 사용자 상태 정리
+            localStorage.removeItem(`botornot_user_${currentUser.id}_status`);
+            console.log('✅ 사용자 상태를 정리했습니다.');
+            
+            // 메인 페이지로 리다이렉트
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('매칭 취소 중 오류 발생:', error);
+            // 에러가 발생해도 메인 페이지로 이동
+            window.location.href = 'index.html';
         }
-        
-        // 메인 페이지로 리다이렉트
-        window.location.href = 'index.html';
     }
 }
 
@@ -148,6 +190,8 @@ function generateUserName() {
 function generateTabId() {
     return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
+
+
 
 /**
  * 페이지 가시성 변경 감지

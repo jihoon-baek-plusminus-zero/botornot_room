@@ -213,33 +213,37 @@ class MatchingSystem {
                 return; // 2명 미만이면 매칭 불가
             }
             
-            console.log(`매칭 시도: 대기열 ${this.waitingQueue.length}명`);
+            console.log(`🎯 매칭 시도: 대기열 ${this.waitingQueue.length}명`);
             
             // 2명씩 순서대로 매칭
             while (this.waitingQueue.length >= 2) {
                 const user1 = this.waitingQueue.shift();
                 const user2 = this.waitingQueue.shift();
                 
-                console.log(`매칭 시도: ${user1.name} + ${user2.name}`);
+                console.log(`🤝 매칭 시도: ${user1.name} (${user1.id}) + ${user2.name} (${user2.id})`);
                 
                 // 매칭 생성
                 const match = this.createMatch(user1, user2);
                 
                 if (match) {
-                    console.log(`매칭 완료: ${user1.name} + ${user2.name} → 방 ${match.roomId}`);
+                    console.log(`✅ 매칭 완료: ${user1.name} + ${user2.name} → 방 ${match.roomId}`);
                     
                     // 매칭된 사용자들에게 알림
+                    console.log(`📢 ${user1.name}에게 매칭 알림 전송...`);
                     this.notifyMatch(user1, match);
+                    
+                    console.log(`📢 ${user2.name}에게 매칭 알림 전송...`);
                     this.notifyMatch(user2, match);
                 } else {
-                    console.error('매칭 생성 실패');
+                    console.error('❌ 매칭 생성 실패');
                 }
             }
             
             // 대기열 상태 저장
             this.saveQueueToStorage();
+            console.log(`💾 대기열 상태 저장 완료: ${this.waitingQueue.length}명 남음`);
         } catch (error) {
-            console.error('매칭 처리 중 오류 발생:', error);
+            console.error('❌ 매칭 처리 중 오류 발생:', error);
             // 에러가 발생해도 시스템은 계속 실행
         }
     }
@@ -354,27 +358,45 @@ class MatchingSystem {
      * 사용자 매칭 상태 확인
      */
     checkUserMatchStatus() {
+        console.log('🔍 사용자 매칭 상태 확인 시작...');
+        
         // 현재 사용자 정보가 있는지 확인 (대기방에서만 실행)
         if (typeof window.currentUser !== 'undefined' && window.currentUser) {
+            console.log('👤 현재 사용자 정보:', window.currentUser);
+            
             const matchCompleteKey = `botornot_match_complete_${window.currentUser.id}`;
+            console.log('🔑 매칭 완료 키:', matchCompleteKey);
+            
             const matchData = localStorage.getItem(matchCompleteKey);
+            console.log('📦 localStorage에서 가져온 데이터:', matchData);
             
             if (matchData) {
                 try {
                     const match = JSON.parse(matchData);
-                    console.log('사용자 매칭 완료 감지:', match);
+                    console.log('✅ 사용자 매칭 완료 감지:', match);
+                    
+                    // 사용자 상태를 'matched'로 업데이트
+                    localStorage.setItem(`botornot_user_${window.currentUser.id}_status`, 'matched');
+                    console.log('✅ 사용자 상태를 "matched"로 업데이트했습니다.');
                     
                     // 매칭 완료 페이지로 리다이렉트
                     const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
-                    console.log(`매칭 완료! ${redirectUrl}로 이동합니다.`);
-                    window.location.href = redirectUrl;
+                    console.log(`🚀 매칭 완료! ${redirectUrl}로 이동합니다.`);
                     
                     // 매칭 완료 데이터 정리
                     localStorage.removeItem(matchCompleteKey);
+                    console.log('🧹 매칭 완료 데이터 정리 완료');
+                    
+                    // 페이지 이동
+                    window.location.href = redirectUrl;
                 } catch (error) {
-                    console.error('매칭 데이터 파싱 오류:', error);
+                    console.error('❌ 매칭 데이터 파싱 오류:', error);
                 }
+            } else {
+                console.log('⏳ 아직 매칭 완료 데이터가 없습니다.');
             }
+        } else {
+            console.log('❌ 현재 사용자 정보를 찾을 수 없습니다.');
         }
     }
     
