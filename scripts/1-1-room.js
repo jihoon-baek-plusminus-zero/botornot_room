@@ -25,21 +25,38 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 보내기 버튼 클릭 이벤트
     sendMessageBtn.addEventListener('click', function() {
-        console.log('메시지 전송 요청됨');
+        console.log('🔘 보내기 버튼 클릭됨');
         sendMessage();
     });
     
-    // Enter 키로 메시지 전송
+    // Enter 키로 메시지 전송 (한글 조합 상태 확인)
     messageInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            sendMessage();
+            console.log('⌨️ Enter 키 입력됨 (한글 조합 상태:', e.isComposing, ')');
+            
+            // 한글 조합 중이 아닐 때만 메시지 전송
+            if (!e.isComposing) {
+                sendMessage();
+            } else {
+                console.log('⏳ 한글 조합 중이므로 전송 대기');
+            }
         }
     });
     
     // 입력 필드 자동 높이 조절
     messageInput.addEventListener('input', function() {
         autoResizeTextarea(this);
+    });
+    
+    // 한글 조합 완료 이벤트 (compositionend)
+    messageInput.addEventListener('compositionend', function(e) {
+        console.log('🔤 한글 조합 완료:', e.data);
+    });
+    
+    // 한글 조합 시작 이벤트 (compositionstart)
+    messageInput.addEventListener('compositionstart', function(e) {
+        console.log('🔤 한글 조합 시작');
     });
     
     // 홈으로 돌아가기 버튼
@@ -251,6 +268,10 @@ function notifyOpponentLeave() {
 function sendMessage() {
     try {
         const messageInput = document.getElementById('messageInput');
+        
+        // 디버깅: 전송 전 입력 필드 값 확인
+        console.log('🔍 전송 전 입력 필드 값:', `"${messageInput.value}"`);
+        
         const message = messageInput.value.trim();
         
         if (message && isConnected) {
@@ -272,17 +293,27 @@ function sendMessage() {
             // 상대방에게 메시지 전송
             sendMessageToOpponent(messageData);
             
-            // 입력 필드 초기화
+            // 디버깅: 전송 후 입력 필드 값 확인
+            console.log('🔍 전송 후 입력 필드 값:', `"${messageInput.value}"`);
+            
+            // 입력 필드 강제 초기화 (한글 조합 상태 해결)
             messageInput.value = '';
             messageInput.style.height = 'auto';
             
-
+            // 디버깅: 초기화 후 입력 필드 값 확인
+            console.log('🔍 초기화 후 입력 필드 값:', `"${messageInput.value}"`);
+            
+            // 입력 필드 포커스 제거 후 다시 포커스 (한글 조합 상태 완전 초기화)
+            messageInput.blur();
+            setTimeout(() => {
+                messageInput.focus();
+            }, 10);
             
         } else if (!isConnected) {
-            console.log('연결이 끊어져 메시지를 전송할 수 없습니다.');
+            console.log('❌ 연결이 끊어져 메시지를 전송할 수 없습니다.');
             alert('연결이 끊어져 메시지를 전송할 수 없습니다.');
         } else {
-            console.log('빈 메시지는 전송할 수 없습니다.');
+            console.log('❌ 빈 메시지는 전송할 수 없습니다.');
         }
     } catch (error) {
         console.error('메시지 전송 중 오류 발생:', error);
