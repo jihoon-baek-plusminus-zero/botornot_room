@@ -36,13 +36,34 @@ document.addEventListener('DOMContentLoaded', function() {
         currentTime: new Date().toISOString()
     });
     
-    // 5초 후 자동 리다이렉트 (실제로는 채팅방으로 이동)
+    // 5초 후 1:1 대화방으로 자동 이동
     setTimeout(() => {
         console.log('자동 리다이렉트 준비 중...');
-        // TODO: 실제 채팅방 페이지로 이동
-        // window.location.href = `chat-room.html?roomId=${roomId}`;
+        if (roomId) {
+            redirectToChatRoom(roomId, matchTime);
+        } else {
+            window.location.href = 'index.html';
+        }
     }, 5000);
 });
+
+/**
+ * 1:1 대화방으로 리다이렉트
+ */
+function redirectToChatRoom(roomId, matchTime) {
+    try {
+        console.log(`1:1 대화방으로 이동합니다. 방 ID: ${roomId}`);
+        
+        // 1:1 대화방으로 이동 (방 ID와 매칭 시간 전달)
+        const chatRoomUrl = `1-1-room.html?roomId=${roomId}&matchTime=${matchTime}`;
+        window.location.href = chatRoomUrl;
+        
+    } catch (error) {
+        console.error('대화방 리다이렉트 중 오류 발생:', error);
+        // 에러가 발생하면 메인 페이지로 이동
+        window.location.href = 'index.html';
+    }
+}
 
 /**
  * 방 정보를 콘솔에 출력

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bot or Not Room - 대화방</title>
-    <link rel="stylesheet" href="styles/chat-room.css">
+    <title>Bot or Not Room - 1:1 대화방</title>
+    <link rel="stylesheet" href="styles/1-1-room.css">
 </head>
 <body>
     <div class="chat-container">
@@ -17,7 +17,8 @@
                 </button>
             </div>
             <div class="header-center">
-                <h1 class="room-title">대화방</h1>
+                <h1 class="room-title">1:1 대화방</h1>
+                <p class="room-status" id="roomStatus">연결 중...</p>
             </div>
             <div class="header-right">
                 <!-- 우측 여백 -->
@@ -26,7 +27,7 @@
 
         <!-- 메시지 영역 -->
         <main class="chat-messages">
-            <div class="messages-container">
+            <div class="messages-container" id="messagesContainer">
                 <!-- 메시지들이 여기에 표시됩니다 -->
                 <div class="message-placeholder">
                     <p>대화가 시작되었습니다. 메시지를 입력해보세요!</p>
@@ -57,6 +58,22 @@
         </footer>
     </div>
 
-    <script src="scripts/chat-room.js"></script>
+    <!-- 게임 종료 알림 모달 -->
+    <div id="gameEndModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>게임 종료</h2>
+            </div>
+            <div class="modal-body">
+                <p>게임이 종료되었습니다.</p>
+                <p>상대방이 방을 나갔습니다.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="goHomeBtn" class="go-home-btn">홈으로 돌아가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/1-1-room.js"></script>
 </body>
 </html>
