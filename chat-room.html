@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot or Not Room - 대화방</title>
+    <link rel="stylesheet" href="styles/chat-room.css">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 상단 헤더 -->
+        <header class="chat-header">
+            <div class="header-left">
+                <button id="leaveRoomBtn" class="leave-btn">
+                    <span class="leave-icon">←</span>
+                    나가기
+                </button>
+            </div>
+            <div class="header-center">
+                <h1 class="room-title">대화방</h1>
+            </div>
+            <div class="header-right">
+                <!-- 우측 여백 -->
+            </div>
+        </header>
+
+        <!-- 메시지 영역 -->
+        <main class="chat-messages">
+            <div class="messages-container">
+                <!-- 메시지들이 여기에 표시됩니다 -->
+                <div class="message-placeholder">
+                    <p>대화가 시작되었습니다. 메시지를 입력해보세요!</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- 하단 입력 영역 -->
+        <footer class="chat-input">
+            <div class="input-container">
+                <div class="input-left">
+                    <!-- 입력 필드 -->
+                </div>
+                <div class="input-right">
+                    <button id="sendMessageBtn" class="send-btn">
+                        보내기
+                    </button>
+                </div>
+            </div>
+            <div class="typing-area">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="메시지를 입력하세요..."
+                    rows="1"
+                ></textarea>
+            </div>
+        </footer>
+    </div>
+
+    <script src="scripts/chat-room.js"></script>
+</body>
+</html>
