@@ -1,0 +1,186 @@
+/* 기본 리셋 및 폰트 설정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+/* 컨테이너 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 헤더 */
+.header {
+    text-align: center;
+    margin-bottom: 60px;
+    margin-top: 40px;
+}
+
+.title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 300;
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.connection-options {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+    max-width: 500px;
+}
+
+/* 버튼 스타일 */
+.connection-btn {
+    display: flex;
+    align-items: center;
+    padding: 30px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.connection-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.connection-btn:hover::before {
+    left: 100%;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.secondary-btn {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.connection-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.connection-btn:active {
+    transform: translateY(-2px);
+}
+
+/* 버튼 내부 요소 */
+.btn-icon {
+    font-size: 2.5rem;
+    margin-right: 20px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.btn-text h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.btn-text p {
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+/* 푸터 */
+.footer {
+    text-align: center;
+    margin-top: 60px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .title {
+        font-size: 2.5rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .connection-btn {
+        padding: 25px;
+    }
+    
+    .btn-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+        min-width: 50px;
+    }
+    
+    .btn-text h3 {
+        font-size: 1.3rem;
+    }
+    
+    .btn-text p {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 2rem;
+    }
+    
+    .connection-btn {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .btn-icon {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
