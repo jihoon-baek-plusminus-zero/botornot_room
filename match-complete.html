@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>매칭 완료 - Bot or Not Room</title>
+    <link rel="stylesheet" href="styles/match-complete.css">
+</head>
+<body>
+    <div class="container">
+        <main class="match-content">
+            <div class="match-card">
+                <div class="success-animation">
+                    <div class="success-icon">🎉</div>
+                    <div class="checkmark">✓</div>
+                </div>
+                
+                <h1 class="match-title">매치메이킹 되었습니다!</h1>
+                
+                <div class="match-info">
+                    <div class="info-item">
+                        <span class="label">방 ID:</span>
+                        <span class="value" id="roomId">로딩중...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">매칭 시간:</span>
+                        <span class="value" id="matchTime">로딩중...</span>
+                    </div>
+                </div>
+                
+                <div class="status-message">
+                    <p>상대방과의 대화가 곧 시작됩니다.</p>
+                    <p>잠시만 기다려주세요...</p>
+                </div>
+                
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2024 Bot or Not Room. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <script src="scripts/match-complete.js"></script>
+</body>
+</html>
