@@ -400,3 +400,30 @@ botornot_room/
 - localStorage 기반 상태 관리로 예측 가능하고 안정적인 동작 보장
 - 에러 발생 시에도 시스템이 계속 동작하는 안정성 대폭 향상
 - 향후 Supabase 마이그레이션을 위한 견고한 기반 구조 완성
+
+---
+
+### 2024년 12월 19일 (목요일) - 변수 스코프 문제 완전 해결
+**시간**: 오후 (현재 시간 기준)
+
+#### ✅ 추가된 항목
+- `currentUser`를 전역 변수로 이동하여 스코프 문제 완전 해결
+- `initializeUser()` 함수 내에서 `window.currentUser` 설정 및 모니터링 시작
+- 사용자 정보 설정 후 모니터링 시스템 시작하는 올바른 순서 구현
+- 전역 변수 접근을 통한 안정적인 모니터링 시스템 구축
+
+#### 🔄 수정된 항목
+- `scripts/waiting-room.js` - `currentUser` 전역 변수 선언 및 함수 호출 순서 최적화
+- `scripts/waiting-room.js` - `initializeUser()` 함수에 전역 설정 및 모니터링 시작 로직 추가
+
+#### ❌ 삭제된 항목
+- `DOMContentLoaded` 콜백 함수 내부의 `let currentUser = null;` 선언
+- `DOMContentLoaded` 콜백 함수 내부의 중복된 `window.currentUser` 설정
+- `DOMContentLoaded` 콜백 함수 내부의 중복된 `startUnifiedMonitoring()` 호출
+
+#### 📋 작업 내용
+- 변수 스코프 문제로 인한 모니터링 시스템 즉시 중단 문제 완전 해결
+- `currentUser`가 모든 함수에서 접근 가능하도록 전역 변수로 이동
+- 사용자 정보 생성 → 전역 설정 → 모니터링 시작의 올바른 순서 구현
+- 두 탭 모두 정상적으로 매칭 완료를 감지할 수 있는 안정적인 시스템 완성
+- 향후 Supabase 마이그레이션을 위한 견고한 기반 구조 최종 완성

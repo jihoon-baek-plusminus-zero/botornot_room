@@ -1,3 +1,6 @@
+// 전역 변수 선언
+let currentUser = null;
+
 // DOM이 로드된 후 실행
 document.addEventListener('DOMContentLoaded', function() {
     console.log('1:1 대기방이 로드되었습니다.');
@@ -7,16 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 대기 상태 초기화
     let isWaiting = true;
-    let currentUser = null;
     
     // 사용자 정보 생성 및 대기열에 추가
     initializeUser();
-    
-    // 현재 사용자를 전역으로 노출 (매칭 시스템에서 접근 가능)
-    window.currentUser = currentUser;
-    
-    // 통합 모니터링 시스템 시작
-    startUnifiedMonitoring();
     
     // 매칭 취소 버튼 클릭 이벤트
     cancelMatchingBtn.addEventListener('click', function() {
@@ -58,10 +54,18 @@ function initializeUser() {
         localStorage.setItem(`botornot_user_${currentUser.id}_status`, 'waiting');
         console.log('✅ 사용자 상태를 "waiting"으로 설정했습니다.');
         
+        // 현재 사용자를 전역으로 노출 (매칭 시스템에서 접근 가능)
+        window.currentUser = currentUser;
+        console.log('✅ 전역에 사용자 정보를 설정했습니다.');
+        
         // 매치메이킹 시스템의 대기열에 추가
         if (window.matchingSystem) {
             const queuePosition = window.matchingSystem.addToQueue(currentUser);
             console.log(`대기열에 추가되었습니다. (위치: ${queuePosition})`);
+            
+            // 통합 모니터링 시스템 시작 (사용자 정보 설정 후)
+            startUnifiedMonitoring();
+            console.log('✅ 모니터링 시스템을 시작했습니다.');
         } else {
             console.error('매치메이킹 시스템을 찾을 수 없습니다.');
             // 3초 후 재시도
