@@ -1,15 +1,15 @@
 /**
- * Bot or Not Room 매치메이킹 시스템
- * 대기열 관리 및 자동 매칭 기능
+ * Bot or Not Room 매치메이킹 시스템 (로컬스토리지 기반)
+ * 대기열 관리 및 자동 매칭 기능 - 탭 간 공유
  */
 
 class MatchingSystem {
     constructor() {
-        // 대기열 (FIFO 방식)
-        this.waitingQueue = [];
+        // 대기열 (FIFO 방식) - 로컬스토리지에서 로드
+        this.waitingQueue = this.loadQueueFromStorage();
         
-        // 활성 방 목록
-        this.activeRooms = new Map();
+        // 활성 방 목록 - 로컬스토리지에서 로드
+        this.activeRooms = new Map(this.loadRoomsFromStorage());
         
         // 매칭 상태
         this.isMatching = false;
@@ -20,10 +20,98 @@ class MatchingSystem {
         // 매칭 타이머
         this.matchingTimer = null;
         
-        console.log('매치메이킹 시스템이 초기화되었습니다.');
+        // 시스템 시작 시간
+        this.startTime = Date.now();
+        
+        console.log('로컬스토리지 기반 매치메이킹 시스템이 초기화되었습니다.');
+        console.log('현재 대기열 상태:', this.waitingQueue.length, '명');
         
         // 매칭 프로세스 시작
         this.startMatchingProcess();
+        
+        // 다른 탭의 변경사항 감지
+        this.setupStorageListener();
+    }
+    
+    /**
+     * 로컬스토리지에서 대기열 로드
+     */
+    loadQueueFromStorage() {
+        try {
+            const stored = localStorage.getItem('botornot_waiting_queue');
+            return stored ? JSON.parse(stored) : [];
+        } catch (error) {
+            console.error('대기열 로드 실패:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * 로컬스토리지에서 방 정보 로드
+     */
+    loadRoomsFromStorage() {
+        try {
+            const stored = localStorage.getItem('botornot_active_rooms');
+            return stored ? JSON.parse(stored) : [];
+        } catch (error) {
+            console.error('방 정보 로드 실패:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * 대기열을 로컬스토리지에 저장
+     */
+    saveQueueToStorage() {
+        try {
+            localStorage.setItem('botornot_waiting_queue', JSON.stringify(this.waitingQueue));
+            // 다른 탭에 변경 알림
+            this.notifyStorageChange('queue');
+        } catch (error) {
+            console.error('대기열 저장 실패:', error);
+        }
+    }
+    
+    /**
+     * 방 정보를 로컬스토리지에 저장
+     */
+    saveRoomsToStorage() {
+        try {
+            const roomsArray = Array.from(this.activeRooms.entries());
+            localStorage.setItem('botornot_active_rooms', JSON.stringify(roomsArray));
+            // 다른 탭에 변경 알림
+            this.notifyStorageChange('rooms');
+        } catch (error) {
+            console.error('방 정보 저장 실패:', error);
+        }
+    }
+    
+    /**
+     * 다른 탭에 스토리지 변경 알림
+     */
+    notifyStorageChange(type) {
+        const event = new StorageEvent('storage', {
+            key: `botornot_${type}`,
+            newValue: localStorage.getItem(`botornot_${type}`),
+            oldValue: null,
+            storageArea: localStorage
+        });
+        window.dispatchEvent(event);
+    }
+    
+    /**
+     * 다른 탭의 스토리지 변경 감지
+     */
+    setupStorageListener() {
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'botornot_queue') {
+                console.log('다른 탭에서 대기열이 변경되었습니다.');
+                this.waitingQueue = this.loadQueueFromStorage();
+            } else if (event.key === 'botornot_rooms') {
+                console.log('다른 탭에서 방 정보가 변경되었습니다.');
+                this.activeRooms = new Map(this.loadRoomsFromStorage());
+            }
+        });
     }
     
     /**
@@ -36,11 +124,15 @@ class MatchingSystem {
             id: user.id || this.generateUserId(),
             name: user.name || '익명',
             joinTime: Date.now(),
-            status: 'waiting'
+            status: 'waiting',
+            tabId: this.generateTabId()
         };
         
         this.waitingQueue.push(userInfo);
         console.log(`사용자 ${userInfo.name}이(가) 대기열에 추가되었습니다. (위치: ${this.waitingQueue.length})`);
+        
+        // 로컬스토리지에 저장
+        this.saveQueueToStorage();
         
         return this.waitingQueue.length;
     }
@@ -55,6 +147,9 @@ class MatchingSystem {
         if (index !== -1) {
             const removedUser = this.waitingQueue.splice(index, 1)[0];
             console.log(`사용자 ${removedUser.name}이(가) 대기열에서 제거되었습니다.`);
+            
+            // 로컬스토리지에 저장
+            this.saveQueueToStorage();
             return true;
         }
         return false;
@@ -71,7 +166,8 @@ class MatchingSystem {
             queue: this.waitingQueue.map((user, index) => ({
                 position: index + 1,
                 name: user.name,
-                joinTime: user.joinTime
+                joinTime: user.joinTime,
+                tabId: user.tabId
             }))
         };
     }
@@ -112,6 +208,8 @@ class MatchingSystem {
             return; // 2명 미만이면 매칭 불가
         }
         
+        console.log(`매칭 시도: 대기열 ${this.waitingQueue.length}명`);
+        
         // 2명씩 순서대로 매칭
         while (this.waitingQueue.length >= 2) {
             const user1 = this.waitingQueue.shift();
@@ -128,6 +226,9 @@ class MatchingSystem {
                 this.notifyMatch(user2, match);
             }
         }
+        
+        // 대기열 상태 저장
+        this.saveQueueToStorage();
     }
     
     /**
@@ -150,6 +251,7 @@ class MatchingSystem {
         
         // 방 정보 저장
         this.activeRooms.set(roomId, match);
+        this.saveRoomsToStorage();
         
         // 사용자 상태 업데이트
         user1.status = 'matched';
@@ -166,8 +268,6 @@ class MatchingSystem {
      * @param {Object} match - 매칭 정보
      */
     notifyMatch(user, match) {
-        // 실제로는 WebSocket이나 Server-Sent Events를 사용
-        // 여기서는 콘솔 로그로 대체
         console.log(`사용자 ${user.name}에게 매칭 알림:`, {
             roomId: match.roomId,
             partner: match.users.find(u => u.id !== user.id)?.name,
@@ -178,7 +278,8 @@ class MatchingSystem {
         const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
         
         // 현재 페이지가 대기방인 경우에만 리다이렉트
-        if (window.location.pathname.includes('waiting-room')) {
+        if (window.location.href.includes('waiting-room')) {
+            console.log(`매칭 완료! ${redirectUrl}로 이동합니다.`);
             window.location.href = redirectUrl;
         }
     }
@@ -202,6 +303,14 @@ class MatchingSystem {
      */
     generateUserId() {
         return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    /**
+     * 탭 ID 생성
+     * @returns {string} 고유한 탭 ID
+     */
+    generateTabId() {
+        return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
     
     /**
@@ -252,11 +361,11 @@ window.matchingSystem = new MatchingSystem();
 
 // 전역 함수로 노출 (다른 스크립트에서 사용)
 window.addToMatchingQueue = function(user) {
-    return window.matchingSystem.addToMatchingQueue(user);
+    return window.matchingSystem.addToQueue(user);
 };
 
 window.removeFromMatchingQueue = function(userId) {
-    return window.matchingSystem.removeFromMatchingQueue(userId);
+    return window.matchingSystem.removeFromQueue(userId);
 };
 
 window.getMatchingQueueStatus = function() {

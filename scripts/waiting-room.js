@@ -41,7 +41,8 @@ function initializeUser() {
     currentUser = {
         id: generateUserId(),
         name: generateUserName(),
-        joinTime: Date.now()
+        joinTime: Date.now(),
+        tabId: generateTabId()
     };
     
     console.log('사용자 정보:', currentUser);
@@ -120,6 +121,13 @@ function generateUserName() {
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     
     return randomAdjective + randomNoun;
+}
+
+/**
+ * 탭 ID 생성
+ */
+function generateTabId() {
+    return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
 /**
