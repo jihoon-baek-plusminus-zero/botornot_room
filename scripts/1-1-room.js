@@ -88,7 +88,16 @@ function initializeRoom() {
         
         // 방 상태를 localStorage에 저장
         localStorage.setItem(`botornot_room_${roomId}_status`, 'active');
-        localStorage.setItem(`botornot_room_${roomId}_users`, JSON.stringify([currentUser.id]));
+        
+        // 기존 사용자 목록에 현재 사용자 추가 (덮어쓰기가 아닌 추가)
+        const existingUsers = JSON.parse(localStorage.getItem(`botornot_room_${roomId}_users`) || '[]');
+        if (!existingUsers.includes(currentUser.id)) {
+            existingUsers.push(currentUser.id);
+            localStorage.setItem(`botornot_room_${roomId}_users`, JSON.stringify(existingUsers));
+            console.log(`✅ 사용자 목록에 추가됨: ${currentUser.name} (총 ${existingUsers.length}명)`);
+        } else {
+            console.log(`ℹ️ 사용자가 이미 목록에 존재함: ${currentUser.name}`);
+        }
         
         // 방 제목 업데이트
         updateRoomTitle();
@@ -96,6 +105,9 @@ function initializeRoom() {
         // 연결 상태 업데이트
         updateConnectionStatus('연결됨');
         isConnected = true;
+        
+        // 방 제목 업데이트 (사용자 수 반영)
+        updateRoomTitle();
         
     } catch (error) {
         console.error('방 초기화 중 오류 발생:', error);
@@ -109,7 +121,10 @@ function initializeRoom() {
 function updateRoomTitle() {
     const roomTitle = document.querySelector('.room-title');
     if (roomTitle) {
-        roomTitle.textContent = `1:1 대화방 (${roomId})`;
+        // 사용자 수를 가져와서 제목에 표시
+        const users = JSON.parse(localStorage.getItem(`botornot_room_${roomId}_users`) || '[]');
+        const userCount = users.length;
+        roomTitle.textContent = `1:1 대화방 (${roomId}) - ${userCount}명`;
     }
 }
 
@@ -127,9 +142,12 @@ function updateConnectionStatus(status) {
  * 실시간 연결 상태 모니터링
  */
 function startConnectionMonitoring() {
+    console.log('🔍 연결 상태 모니터링 시작...');
+    
     const monitorInterval = setInterval(() => {
         try {
             if (!isConnected || !roomId) {
+                console.log('⏹️ 모니터링 중단: 연결 상태 또는 방 ID 없음');
                 clearInterval(monitorInterval);
                 return;
             }
@@ -137,7 +155,7 @@ function startConnectionMonitoring() {
             // 방 상태 확인
             const roomStatus = localStorage.getItem(`botornot_room_${roomId}_status`);
             if (roomStatus !== 'active') {
-                console.log('방이 비활성화되었습니다.');
+                console.log('❌ 방이 비활성화되었습니다.');
                 showGameEndModal('상대방이 방을 나갔습니다.');
                 clearInterval(monitorInterval);
                 return;
@@ -146,8 +164,11 @@ function startConnectionMonitoring() {
             // 상대방 연결 상태 확인
             checkOpponentStatus();
             
+            // 방 제목 업데이트 (사용자 수 반영)
+            updateRoomTitle();
+            
         } catch (error) {
-            console.error('연결 상태 모니터링 중 오류 발생:', error);
+            console.error('❌ 연결 상태 모니터링 중 오류 발생:', error);
         }
     }, 2000); // 2초마다 확인
 }
@@ -158,30 +179,42 @@ function startConnectionMonitoring() {
 function checkOpponentStatus() {
     try {
         const users = JSON.parse(localStorage.getItem(`botornot_room_${roomId}_users`) || '[]');
+        const userCount = users.length;
+        
+        console.log(`🔍 방 상태 확인: 총 ${userCount}명, 현재 사용자: ${currentUser.name}`);
+        
+        // 상대방 ID 찾기
         const opponentId = users.find(id => id !== currentUser.id);
         
         if (!opponentId) {
-            console.log('상대방을 찾을 수 없습니다.');
-            showGameEndModal('상대방이 방을 나갔습니다.');
+            console.log('⏳ 상대방이 아직 접속하지 않았습니다. 대기 중...');
+            // 상대방이 아직 접속하지 않은 경우, 방을 종료하지 않고 대기
             return;
         }
+        
+        console.log(`✅ 상대방 발견: ${opponentId}`);
         
         // 상대방의 마지막 활동 시간 확인
         const lastActivity = localStorage.getItem(`botornot_room_${roomId}_user_${opponentId}_activity`);
         if (lastActivity) {
             const lastTime = parseInt(lastActivity);
             const currentTime = Date.now();
+            const timeDiff = currentTime - lastTime;
+            
+            console.log(`⏰ 상대방 마지막 활동: ${timeDiff}ms 전`);
             
             // 10초 이상 활동이 없으면 연결 끊김으로 간주
-            if (currentTime - lastTime > 10000) {
-                console.log('상대방 연결이 끊어졌습니다.');
+            if (timeDiff > 10000) {
+                console.log('❌ 상대방 연결이 끊어졌습니다.');
                 showGameEndModal('상대방의 연결이 끊어졌습니다.');
                 return;
             }
+        } else {
+            console.log('ℹ️ 상대방 활동 기록이 없습니다. (새로 접속한 사용자)');
         }
         
     } catch (error) {
-        console.error('상대방 상태 확인 중 오류 발생:', error);
+        console.error('❌ 상대방 상태 확인 중 오류 발생:', error);
     }
 }
 
