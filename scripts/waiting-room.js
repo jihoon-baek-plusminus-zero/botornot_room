@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 사용자 정보 생성 및 대기열에 추가
     initializeUser();
     
+    // 현재 사용자를 전역으로 노출 (매칭 시스템에서 접근 가능)
+    window.currentUser = currentUser;
+    
     // 매칭 취소 버튼 클릭 이벤트
     cancelMatchingBtn.addEventListener('click', function() {
         console.log('매칭 취소 요청됨');
@@ -78,6 +81,11 @@ function startQueueMonitoring() {
             if (queueStatus.queue.every(user => user.id !== currentUser.id)) {
                 console.log('사용자가 대기열에서 제거되었습니다. (매칭 완료 예정)');
                 clearInterval(monitorInterval);
+                
+                // 매칭 완료 상태 확인 (즉시 확인)
+                setTimeout(() => {
+                    window.matchingSystem.checkUserMatchStatus();
+                }, 100);
             }
         }
     }, 2000); // 2초마다 확인

@@ -110,6 +110,10 @@ class MatchingSystem {
             } else if (event.key === 'botornot_rooms') {
                 console.log('다른 탭에서 방 정보가 변경되었습니다.');
                 this.activeRooms = new Map(this.loadRoomsFromStorage());
+            } else if (event.key === 'botornot_match_complete') {
+                console.log('다른 탭에서 매칭 완료 이벤트가 발생했습니다.');
+                // 매칭 완료 상태 확인
+                this.checkUserMatchStatus();
             }
         });
     }
@@ -274,12 +278,24 @@ class MatchingSystem {
             matchTime: match.matchTime
         });
         
-        // 매칭 완료 페이지로 리다이렉트
-        const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
+        // 매칭 완료 상태를 localStorage에 저장 (다른 탭에서 감지 가능)
+        const matchCompleteKey = `botornot_match_complete_${user.id}`;
+        const matchData = {
+            roomId: match.roomId,
+            matchTime: match.matchTime,
+            timestamp: Date.now(),
+            userId: user.id,
+            userName: user.name
+        };
+        localStorage.setItem(matchCompleteKey, JSON.stringify(matchData));
+        
+        // 다른 탭에 매칭 완료 알림
+        this.notifyStorageChange('match_complete');
         
         // 현재 페이지가 대기방인 경우에만 리다이렉트
         if (window.location.href.includes('waiting-room')) {
             console.log(`매칭 완료! ${redirectUrl}로 이동합니다.`);
+            const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
             window.location.href = redirectUrl;
         }
     }
@@ -311,6 +327,34 @@ class MatchingSystem {
      */
     generateTabId() {
         return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    /**
+     * 사용자 매칭 상태 확인
+     */
+    checkUserMatchStatus() {
+        // 현재 사용자 정보가 있는지 확인 (대기방에서만 실행)
+        if (typeof window.currentUser !== 'undefined' && window.currentUser) {
+            const matchCompleteKey = `botornot_match_complete_${window.currentUser.id}`;
+            const matchData = localStorage.getItem(matchCompleteKey);
+            
+            if (matchData) {
+                try {
+                    const match = JSON.parse(matchData);
+                    console.log('사용자 매칭 완료 감지:', match);
+                    
+                    // 매칭 완료 페이지로 리다이렉트
+                    const redirectUrl = `match-complete.html?roomId=${match.roomId}&matchTime=${match.matchTime}`;
+                    console.log(`매칭 완료! ${redirectUrl}로 이동합니다.`);
+                    window.location.href = redirectUrl;
+                    
+                    // 매칭 완료 데이터 정리
+                    localStorage.removeItem(matchCompleteKey);
+                } catch (error) {
+                    console.error('매칭 데이터 파싱 오류:', error);
+                }
+            }
+        }
     }
     
     /**
