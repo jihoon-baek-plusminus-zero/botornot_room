@@ -170,7 +170,7 @@ function startConnectionMonitoring() {
         } catch (error) {
             console.error('❌ 연결 상태 모니터링 중 오류 발생:', error);
         }
-    }, 2000); // 2초마다 확인
+    }, 1000); // 1초마다 확인 (더 빠른 반응)
 }
 
 /**
@@ -181,8 +181,6 @@ function checkOpponentStatus() {
         const users = JSON.parse(localStorage.getItem(`botornot_room_${roomId}_users`) || '[]');
         const userCount = users.length;
         
-        console.log(`🔍 방 상태 확인: 총 ${userCount}명, 현재 사용자: ${currentUser.name}`);
-        
         // 상대방 ID 찾기
         const opponentId = users.find(id => id !== currentUser.id);
         
@@ -192,26 +190,7 @@ function checkOpponentStatus() {
             return;
         }
         
-        console.log(`✅ 상대방 발견: ${opponentId}`);
-        
-        // 상대방의 마지막 활동 시간 확인
-        const lastActivity = localStorage.getItem(`botornot_room_${roomId}_user_${opponentId}_activity`);
-        if (lastActivity) {
-            const lastTime = parseInt(lastActivity);
-            const currentTime = Date.now();
-            const timeDiff = currentTime - lastTime;
-            
-            console.log(`⏰ 상대방 마지막 활동: ${timeDiff}ms 전`);
-            
-            // 10초 이상 활동이 없으면 연결 끊김으로 간주
-            if (timeDiff > 10000) {
-                console.log('❌ 상대방 연결이 끊어졌습니다.');
-                showGameEndModal('상대방의 연결이 끊어졌습니다.');
-                return;
-            }
-        } else {
-            console.log('ℹ️ 상대방 활동 기록이 없습니다. (새로 접속한 사용자)');
-        }
+        // 상대방이 정상적으로 접속되어 있음 (활동 시간 무시)
         
     } catch (error) {
         console.error('❌ 상대방 상태 확인 중 오류 발생:', error);
@@ -297,8 +276,7 @@ function sendMessage() {
             messageInput.value = '';
             messageInput.style.height = 'auto';
             
-            // 사용자 활동 시간 업데이트
-            updateUserActivity();
+
             
         } else if (!isConnected) {
             console.log('연결이 끊어져 메시지를 전송할 수 없습니다.');
@@ -378,18 +356,7 @@ function sendMessageToOpponent(messageData) {
     }
 }
 
-/**
- * 사용자 활동 시간 업데이트
- */
-function updateUserActivity() {
-    try {
-        if (roomId && currentUser) {
-            localStorage.setItem(`botornot_room_${roomId}_user_${currentUser.id}_activity`, Date.now().toString());
-        }
-    } catch (error) {
-        console.error('사용자 활동 시간 업데이트 중 오류 발생:', error);
-    }
-}
+
 
 /**
  * 새 메시지 확인
@@ -513,8 +480,8 @@ setTimeout(() => {
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         console.log('대화방이 숨겨졌습니다.');
-        // 사용자 활동 시간 업데이트
-        updateUserActivity();
+        // 새 메시지 확인
+        checkNewMessages();
     } else {
         console.log('대화방이 다시 활성화되었습니다.');
         // 새 메시지 확인
